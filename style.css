@@ -1,0 +1,288 @@
+@font-face {
+  font-family: 'Witcher';
+  src: url('./fonts/thewitcher.ttf') format('truetype');
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: grey;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.card {
+    position: relative;
+    width: 200px;
+    height: 300px;
+    background-image: url("./assets/aard.webp");
+    background-size: cover;
+    background-position: 25px center;
+    border-radius: 10px;
+    overflow: hidden;    
+}
+
+.card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 5px solid rgb(110, 91, 58);
+    border-radius: 10px;
+
+    pointer-events: none;
+
+    z-index: 100;
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.card-details {
+    position: absolute;
+    bottom: 2%;
+    left: 14%;
+    
+    width: 85%;
+    height: 34%;
+    
+}
+
+.card-special {
+    position: relative;
+    top: 4%;
+    left: 4%;
+    
+    width: 92%;
+    height: 80%;
+    background-image: url("./assets/paper-back.png");
+    background-size: 100% 100%;
+    filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.7));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    padding: 8px 8px 8px 16px;
+
+    z-index: 1;
+}
+
+.card-special div, .card-name-cont div {
+    position: relative;
+    font-family: "Witcher", sans-serif;
+}
+
+.card-special-header {
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.card-special-desc {
+    margin-top: 16px;
+
+    font-size: 8px;
+    opacity: 70%;
+}
+
+.card-name {
+    position: relative;
+    left: 25%;
+    top: -5%;
+
+    height: 25px;
+    width: 120px;
+
+    background-image: url("./assets/card-name.png");
+    background-size: 100% 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10pt;
+    font-family: "Witcher";
+
+    z-index: 20;
+}
+
+.card-cost {
+    position: absolute;
+    bottom: 0;
+    right: 2%;
+
+    width: 20px;
+    height: 30px;
+    background-color: rgb(15, 65, 36);
+
+    border: 2px solid black;
+    color: whitesmoke;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 20;
+}
+
+.card-biom-back {
+    position: absolute;
+    width: 70%;
+    height: 12%;
+
+    bottom: 0;
+
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+
+    background: rgb(178, 158, 122);
+
+    z-index: 15;
+}
+
+.card-biom {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+
+    border-radius: 50%;
+    background-image: url('./assets/card-biome-river.png');
+    background-size: cover;
+    filter: drop-shadow(0px 0px 10px rgba(0,0,0,0.8));
+    
+    bottom: 2%;
+    left: 3%;
+
+    z-index: 20;
+}
+
+
+
+.card-actions-wrapper {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.card-actions {
+    position: absolute;
+    width: 55px;
+    height: 100%;
+
+    left: -8px;
+    top: -4px;
+
+    padding-top: 9px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    background-image: url("./assets/card-actions-green.png");
+    background-size: 100% 100%;
+    box-shadow: 
+        inset 20px 15px 12px rgba(0,0,0,0.45);
+    transform: rotate(3deg);
+
+    overflow: hidden;
+    z-index: 10;
+}
+
+.card-actions-shadow {
+    box-shadow: 30px 0px 12px rgba(0,0,0,0.5);
+        position: absolute;
+    width: 35px;
+    height: 100%;
+
+    left: -8px;
+    top: -4px;
+
+    padding-top: 9px;
+    z-index: 9;
+    transform: rotate(3deg);
+
+}
+
+.card-action {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    background-color: blue;
+    margin: 2px;
+    color: white;
+    border-radius: 50%;
+}
+
+.card-combo-tongue {
+    position: absolute;
+    width: 20px;
+    height: 18%;
+    z-index: 1;
+    transform: rotate(3deg);
+    clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+
+    padding: 10px;
+}
+
+.green {
+    background-color: green;
+    top: 0px;
+    left: 44px;
+    z-index: 5;
+}
+
+.yellow {
+    background-color: yellow;
+    top: 30px;
+    left: 42px;
+    z-index: 4;
+}
+
+.purple {
+    background-color: purple;
+    top: 60px;
+    left: 40px;
+    z-index: 3;
+}
+
+.blue {
+    background-color: blue;
+    top: 90px;
+    left: 38px;
+    z-index: 2;
+}
+
+.red {
+    background-color: red;
+    top: 120px;
+    left: 36px;
+    z-index: 1;
+}
+
+.card-combo-action {
+    width: 15px;
+    height: 15px;
+
+    background-color: black;
+    border-radius: 50%;
+}
+
+.card-school-sign {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: red;
+}
