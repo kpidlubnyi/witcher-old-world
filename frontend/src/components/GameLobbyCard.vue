@@ -1,16 +1,32 @@
 <script setup>
 import { lobbiesApi } from "@/api/lobbies"
+import { computed } from "vue";
 
-defineProps(['data'])
+
+const props = defineProps(['data', 'activeLobbyId'])  
+const emit = defineEmits(['status-changed'])
+
+
+const isMyLobby = computed(() => props.activeLobbyId === props.data.id)
+const isInAnyLobby = computed(() => !!props.activeLobbyId)
 
 const handleJoinToLobby = async (id) => {
     try {
-        const res = await lobbiesApi.joinToLobby(id);
+        await lobbiesApi.joinToLobby(id);
+        emit("status-changed", id)
     } catch (err) {
         alert(err.response?.data?.detail || "Failed to join");
     }
 }
 
+const handleLeaveLobby = async (id) => {
+    try {
+        await lobbiesApi.leaveLobby(id);
+        emit("status-changed", null)
+    } catch (err) {
+        alert(err.response?.data?.detail || "Failed to leave");
+    }
+}
 </script>
 
 
@@ -23,7 +39,17 @@ const handleJoinToLobby = async (id) => {
         <div>{{ data.current_players }} / {{ data.max_players }} players</div>
     </div>
     <div class="card-interaction">
-        <button class="join-lobby-btn" @click="handleJoinToLobby(data.id)">+</button>
+        <button v-if="isMyLobby" class="leave-lobby-btn" @click="handleLeaveLobby(data.id)">
+            -
+        </button>
+
+        <button v-else 
+            class="join-lobby-btn" 
+            :disabled="isInAnyLobby"
+            :class="{ 'btn-disabled': isInAnyLobby}" 
+            @click="handleJoinToLobby(data.id)">
+            +
+        </button>
     </div>
 </div>
 </template>
@@ -63,6 +89,22 @@ const handleJoinToLobby = async (id) => {
     background-color: #26b619;
     color: whitesmoke;
     font-size: 20pt;
+}
+
+.leave-lobby-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background-color: #d41b1b;
+    color: whitesmoke;
+    font-size: 20pt;
+}
+
+.btn-disabled {
+    background-color: #95a5a6 !important;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 </style>
