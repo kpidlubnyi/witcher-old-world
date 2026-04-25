@@ -2,6 +2,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 import redis.asyncio as redis
 from typing import AsyncGenerator
 
+from .config import settings
+
+
 class RedisClient:
     def __init__(self):
         self.client: redis.Redis | None = None
@@ -25,7 +28,7 @@ class PostgresClient:
 
     async def connect(self):
         self.engine = create_async_engine(
-            "postgresql+asyncpg://user:password@localhost:5432/dbname",
+            settings.DATABASE_URL,
             echo=False
         )
         self.session_factory = async_sessionmaker(

@@ -1,50 +1,50 @@
-from fastapi import APIRouter, Body
-from fastapi.responses import RedirectResponse
 from typing import Annotated
 
-import aiohttp
-import jwt
+from fastapi import APIRouter, Body, Depends, Response, Request
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from .service import generate_google_oauth_redirect_uri
-from ..config import settings
+from ..database import get_db
+from .services.auth import *
 
 
-auth_router = APIRouter(
-    prefix='/auth'
-)
+auth_router = APIRouter(prefix='/auth')
 
 
 @auth_router.get("/google/url")
-def get_google_oauth_redirect_uri():
+def get_google_auth_url():
     uri = generate_google_oauth_redirect_uri()
-    return RedirectResponse(url=uri, status_code=302)
+    return RedirectResponse(url=uri)
 
 
 @auth_router.post("/google/callback")
-async def handle_code(code: Annotated[str, Body(embed=True)]):
-    google_token_url = 'https://oauth2.googleapis.com/token'
-    async with aiohttp.ClientSession() as session:
-        async with session.post(
-            url=google_token_url,
-            data= {
-                "client_id": settings.OAUTH_GOOGLE_CLIENT_ID,
-                "client_secret": settings.OAUTH_GOOGLE_CLIENT_SECRET,
-                "grant_type": "authorization_code",
-                "redirect_uri": "http://localhost:5173/auth/google",
-                "code": code  
-            },
-            ssl=False
-        ) as response:
-            res = await response.json()
-            print(f'{res=}')
-            id_token = res['id_token']
-            user_data = jwt.decode(
-                id_token, 
-                algorithms=["RS256"], 
-                options={"verify_signature": False}
-            )
+async def handle_google_callback(
+    code: Annotated[str, Body(embed=True)],
+    response: Response,
+    db: AsyncSession = Depends(get_db)
+):
+    tokens = await exchange_code_for_tokens(code)
+    user_info = verify_id_token(tokens["id_token"])
+    user = await get_or_create_google_user(db, user_info)
+    
+    authenticate_user(response, user.id)
 
-            
     return {
-        "user": user_data
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "picture": user.picture,
     }
+
+
+@auth_router.post("/refresh")
+async def refresh_token(request: Request, response: Response):
+    user_id = refresh_user_session(request, response)
+    set_access_token_cookie(response, user_id)
+    return {"status": "refreshed"}
+
+
+@auth_router.post("/logout")
+async def logout(response: Response):
+    logout_user(response)
+    return {"status": "logged_out"}
