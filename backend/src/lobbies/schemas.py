@@ -1,50 +1,36 @@
-from pydantic import BaseModel, field_validator, computed_field
 import time
+import uuid
 import arrow
 
-class Lobby(BaseModel):
-    id: str
+from pydantic import BaseModel, Field, computed_field, field_validator
+
+
+class LobbyBase(BaseModel):
+    name: str | None = None
+    max_players: int = Field(default=4, ge=2, le=5)
+
+
+class CreateLobby(LobbyBase):
+    pass
+
+
+class Lobby(LobbyBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     host_id: int
     host_name: str
-    name: str | None = None
-    max_players: int = 4
-    created_at: int = None
+    created_at: int = Field(default_factory=lambda: int(time.time()))
 
-    @field_validator("created_at", mode="before")
+    @field_validator("name", mode="after")
     @classmethod
-    def set_created_at(cls, v):
-        return v or int(time.time())
-
-    @field_validator("name", mode="before")
-    @classmethod
-    def set_name(cls, v, info):
+    def set_default_name(cls, v: str | None, info) -> str:
         if v:
             return v
-        data = info.data
-        return f"lobbies #{data.get('id', '')}"
-    
+        lobby_id = info.data.get("id", "unknown")
+        return f"Lobby #{lobby_id[:8]}"
 
-class CreateLobby(BaseModel):
-    name: str
-    max_players: int
 
-    @field_validator("max_players")
-    @classmethod
-    def validate_players(cls, v):
-        if not (2 <= v < 6):
-            raise ValueError("max_players must be between 2 and 5")
-        return v
-    
 class LobbyResponse(Lobby):
-    id: str
-    host_id: int
-    host_name: str
-    name: str | None = None
-    max_players: int = 4
-    created_at: int = None
-    
     @computed_field
     @property
     def created_ago(self) -> str:
         return arrow.get(self.created_at).humanize()
-    
