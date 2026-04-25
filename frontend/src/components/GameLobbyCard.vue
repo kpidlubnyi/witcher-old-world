@@ -1,17 +1,13 @@
 <script setup>
 defineProps(['data'])
-
-function pretifyDate(timestamp) {
-    const date = new Date(Number(timestamp) * 1000)
-    return date.toLocaleString()
-}
 </script>
 
 
 <template>
 <div class="card-container">
     <h2>{{ data.name }}</h2>
-    <h4>created by {{ data.host_id }} at {{ pretifyDate(data.created_at) }}</h4>
+    <h3>created by {{ data.host_name }} </h3>
+    <h4>{{ data.created_ago }}</h4>
 </div>
 </template>
 
@@ -19,7 +15,7 @@ function pretifyDate(timestamp) {
 <style>
 .card-container {
     width: 300px;
-    height: 100px;
+    height: 120px;
     background-color: lightgray;
     border-radius: 10px;
 }

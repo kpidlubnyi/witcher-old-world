@@ -3,12 +3,16 @@ import asyncio
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, status, WebSocket, Path
 from typing import Annotated
 
-from .schemas import CreateLobby
-from .service import create_lobby_model, add_lobby, get_lobbies
 from src.database import get_redis
+from src.auth.dependencies import get_current_user
+from src.auth.models import User
+
+from .schemas import CreateLobby
+from .service import create_lobby_model, add_lobby, get_lobbies, user_has_active_lobby
 
 
 type RedisDependency = Annotated[redis.Redis, Depends(get_redis)]
+type CurrentUserDependency = Annotated[User, Depends(get_current_user)]
 
 
 lobbies_router = APIRouter(
@@ -23,15 +27,22 @@ async def lobbies_root(websocket: WebSocket, r: RedisDependency):
 
     while True:
         data = await get_lobbies(r)
-        await websocket.send_json(data)
+        await websocket.send_json([lobby.model_dump() for lobby in data])
         await asyncio.sleep(5)
 
 
 @lobbies_router.post("/create")
-async def create_lobby(lobby_form: Annotated[CreateLobby, Form], r: RedisDependency):
+async def create_lobby(
+    lobby_form: Annotated[CreateLobby, Form], 
+    r: RedisDependency,
+    current_user: CurrentUserDependency
+):
+    if await user_has_active_lobby(current_user, r):
+        raise HTTPException(status_code=409, detail="User already has active lobby!")
+    
     try:
-        lobby = create_lobby_model(lobby_form)
-        await add_lobby(lobby, r)
+        lobby = create_lobby_model(lobby_form, current_user)
+        await add_lobby(lobby, r, current_user)
         
         return Response(
             status_code=status.HTTP_201_CREATED,

@@ -1,13 +1,12 @@
-from pydantic import BaseModel, field_validator
-from typing import Literal
+from pydantic import BaseModel, field_validator, computed_field
 import time
-
+import arrow
 
 class Lobby(BaseModel):
     id: str
-    host_id: str
+    host_id: int
+    host_name: str
     name: str | None = None
-    status: Literal["waiting", "started"] = "waiting"
     max_players: int = 4
     created_at: int = None
 
@@ -35,3 +34,17 @@ class CreateLobby(BaseModel):
         if not (2 <= v < 6):
             raise ValueError("max_players must be between 2 and 5")
         return v
+    
+class LobbyResponse(Lobby):
+    id: str
+    host_id: int
+    host_name: str
+    name: str | None = None
+    max_players: int = 4
+    created_at: int = None
+    
+    @computed_field
+    @property
+    def created_ago(self) -> str:
+        return arrow.get(self.created_at).humanize()
+    
