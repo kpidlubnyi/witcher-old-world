@@ -56,9 +56,9 @@ async def create_lobby(lobby: Lobby, r: redis.Redis, user: User):
         await pipe.execute()    
         
 
-async def join_lobby(user: User, lobby: Lobby, r: redis.Redis):
+async def join_lobby(user_id: int, lobby: Lobby, r: redis.Redis):
     lobby_players_key = get_lobby_players_key(lobby.id)
-    user_lobby_key = get_user_active_lobby_key(user.id)
+    user_lobby_key = get_user_active_lobby_key(user_id)
     
     async with r.pipeline(transaction=True) as pipe:
         await pipe.watch(lobby_players_key)
@@ -69,12 +69,32 @@ async def join_lobby(user: User, lobby: Lobby, r: redis.Redis):
             raise HTTPException(status_code=400, detail="Lobby is full!")
 
         pipe.multi()
-        pipe.sadd(lobby_players_key, user.id)
+        pipe.sadd(lobby_players_key, user_id)
         pipe.set(user_lobby_key, lobby.id, ex=3600) 
     
         await pipe.execute()
     
+
+async def leave_lobby(user_id: int, lobby_id: str, r: redis.Redis):
+    players_key = get_lobby_players_key(lobby_id)
+    user_key = get_user_active_lobby_key(user_id)
+    data_key = get_lobby_data_key(lobby_id)
     
+    async with r.pipeline(transaction=True) as pipe:
+        pipe.srem(players_key, user_id)
+        pipe.delete(user_key)
+        await pipe.execute()
+    
+    remaining_players = await r.scard(players_key)
+    
+    if remaining_players == 0:
+        async with r.pipeline(transaction=True) as pipe:
+            pipe.delete(data_key)
+            pipe.delete(players_key)
+            pipe.zrem("lobbies:open", lobby_id)
+            await pipe.execute()
+
+            
 async def get_lobbies(r: redis.Redis):
     lobby_ids = await r.zrange("lobbies:open", 0, -1)
     if not lobby_ids:
