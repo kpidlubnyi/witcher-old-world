@@ -110,3 +110,22 @@ async def leave_lobby_endpoint(
         content=json.dumps(response_content),
         media_type="application/json"
     )
+    
+    
+@lobbies_router.get("/my-status")
+async def get_my_status(
+    user: CurrentUserDependency,
+    r: RedisDependency
+):
+    lobby_id = await r.get(get_user_active_lobby_key(user.id))
+    
+    status_data = {
+        "is_in_lobby": lobby_id is not None,
+        "lobby_id": lobby_id
+    }
+    
+    return Response(
+        status_code=status.HTTP_200_OK,
+        content=json.dumps(status_data),
+        media_type="application/json"
+    )
