@@ -2,6 +2,7 @@ import uuid
 import time
 import json
 import redis.asyncio as redis
+from fastapi import HTTPException
 
 from .schemas import CreateLobby, Lobby, LobbyResponse
 from ..auth.models import User
@@ -13,12 +14,20 @@ def get_user_active_lobby_key(user_id: int) -> str:
 def get_lobby_data_key(lobby_id: str) -> str:
     return f'lobby:data:{lobby_id}'
 
+def get_lobby_players_key(lobby_id: str) -> str:
+    return f'lobby:players:{lobby_id}'
+
 
 async def user_has_active_lobby(user: User, r: redis.Redis) -> bool:
     key = get_user_active_lobby_key(user.id)
     return await r.exists(key)
 
 
+async def get_raw_lobby(lobby_id: str, r: redis.Redis):
+    key = get_lobby_data_key(lobby_id)
+    return await r.get(key)
+    
+    
 def create_lobby_model(data: CreateLobby, user: User):
     return Lobby(
         id=str(uuid.uuid4()),
@@ -30,27 +39,66 @@ def create_lobby_model(data: CreateLobby, user: User):
     )
 
 
-async def add_lobby(lobby: Lobby, r: redis.Redis, user: User):
+async def create_lobby(lobby: Lobby, r: redis.Redis, user: User):
     lobby_id = lobby.id
     lobby_json = lobby.model_dump_json()
-    user_key = get_user_active_lobby_key(user.id) 
+    lobby_user_key = get_user_active_lobby_key(user.id) 
     lobby_data_key = get_lobby_data_key(lobby_id)
+    lobby_players_key = get_lobby_players_key(lobby_id)
     
     async with r.pipeline(transaction=True) as pipe:
-        pipe.set(user_key, lobby_id, ex=3600)
         pipe.set(lobby_data_key, lobby_json, ex=3600)
         pipe.zadd("lobbies:open", {lobby_id: lobby.created_at})
+        pipe.set(lobby_user_key, lobby_id, ex=3600)
+        pipe.sadd(lobby_players_key, user.id)
+        pipe.expire(lobby_players_key, 3600)
         
         await pipe.execute()    
+        
+
+async def join_lobby(user: User, lobby: Lobby, r: redis.Redis):
+    lobby_players_key = get_lobby_players_key(lobby.id)
+    user_lobby_key = get_user_active_lobby_key(user.id)
+    
+    async with r.pipeline(transaction=True) as pipe:
+        await pipe.watch(lobby_players_key)
+    
+        current_count = await r.scard(lobby_players_key)
+        if current_count >= lobby.max_players:
+            await pipe.unwatch()
+            raise HTTPException(status_code=400, detail="Lobby is full!")
+
+        pipe.multi()
+        pipe.sadd(lobby_players_key, user.id)
+        pipe.set(user_lobby_key, lobby.id, ex=3600) 
+    
+        await pipe.execute()
     
     
-async def get_lobbies(r:redis.Redis):
+async def get_lobbies(r: redis.Redis):
     lobby_ids = await r.zrange("lobbies:open", 0, -1)
-    
     if not lobby_ids:
         return []
     
-    keys = [get_lobby_data_key(l_id) for l_id in lobby_ids]
-    lobbies_raw = await r.mget(keys)
-    active_lobbies = [LobbyResponse(**json.loads(l)) for l in lobbies_raw if l is not None]    
+    data_keys = [get_lobby_data_key(l_id) for l_id in lobby_ids]
+    
+    async with r.pipeline() as pipe:
+        for key in data_keys:
+            pipe.get(key)
+        for l_id in lobby_ids:
+            pipe.scard(get_lobby_players_key(l_id))
+        
+        results = await pipe.execute()
+
+    mid = len(results) // 2
+    raw_lobbies = results[:mid]
+    player_counts = results[mid:]
+
+    active_lobbies = []
+    for raw, count in zip(raw_lobbies, player_counts):
+        if raw:
+            data = json.loads(raw)
+            data["current_players"] = count
+            active_lobbies.append(LobbyResponse(**data))
+            
     return active_lobbies

@@ -30,6 +30,8 @@ class Lobby(LobbyBase):
 
 
 class LobbyResponse(Lobby):
+    current_players: int = 1
+    
     @computed_field
     @property
     def created_ago(self) -> str:
