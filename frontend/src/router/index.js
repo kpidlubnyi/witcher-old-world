@@ -10,11 +10,6 @@ const routes = [
     component: GameLobby
   },
   {
-    path: '/auth/google',
-    name: 'google-auth',
-    component: AuthCallback
-  },
-  {
     path: '/debug',
     name: 'debug',
     component: DebugPage
