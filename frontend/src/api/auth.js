@@ -18,5 +18,8 @@ export const authApi = {
     } catch (error) {
         throw error;
     }
+  },
+  async logout() {
+    await api.post("/auth/logout");
   }
 };

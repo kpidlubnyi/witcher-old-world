@@ -2,6 +2,17 @@
 defineProps(['isOpen', 'userStats']);
 const emit = defineEmits(['close']);
 import SvgIcon from './UI/SvgIcon.vue';
+import { authApi } from '@/api/auth';
+
+
+const handleLogout = async () => {
+    try {
+        await authApi.logout();
+        window.location.reload(); 
+    } catch (err) {
+        console.error("Logout failed", err);
+    }
+};
 </script>
 
 <template>
@@ -24,7 +35,7 @@ import SvgIcon from './UI/SvgIcon.vue';
           
           </div>
 
-          <button class="logout-btn" @click="">
+          <button class="logout-btn" @click="handleLogout">
             <SvgIcon name="logout" class="svg-icon" />
           </button>
         </div>
@@ -37,6 +48,7 @@ import SvgIcon from './UI/SvgIcon.vue';
 @font-face {
   font-family: 'Witcher';
   src: url('./fonts/thewitcher.ttf') format('truetype');
+  font-display: swap;
 }
 
 * {
@@ -90,10 +102,11 @@ import SvgIcon from './UI/SvgIcon.vue';
 }
 
 .header-photo {
-  background-color: green;
   width: 25%;
   height: 100%;
   border-radius: 50%;
+
+  box-shadow: 0 0 20px rgba(0,0,0, 0.6);
 }
 
 .header-info {
@@ -139,6 +152,12 @@ import SvgIcon from './UI/SvgIcon.vue';
 }
 
 .logout-btn {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+
+  display: flex;
+  
   position: absolute;
   bottom: 10px;
   right: 15px;
@@ -146,10 +165,22 @@ import SvgIcon from './UI/SvgIcon.vue';
   border: none;
   font-size: 24px;
   cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.logout-btn:hover {
+  background-color: red;
+  transition: 0.2s ease-in-out;
 }
 
 .svg-icon {
   width: 50px;
+  transition: 0.2s ease-in-out;
+}
+
+.logout-btn:hover .svg-icon {
+  fill: white;
+  transition: 0.2s ease-in-out;
 }
 
 
