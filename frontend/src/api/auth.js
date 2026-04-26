@@ -10,5 +10,13 @@ export const authApi = {
       const message = error.response?.data?.detail || "Failed to authenticate";
       throw new Error(message);
     }
+  },
+  async getUserData() {
+    try {
+      const { data } = await api.get("/auth/profile")
+      return data
+    } catch (error) {
+        throw error;
+    }
   }
 };

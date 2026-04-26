@@ -2,27 +2,30 @@
 import { ref } from 'vue'
 import ProfileModal from './ProfileModal.vue'
 import SvgIcon from './UI/SvgIcon.vue'
+import { authApi } from '@/api/auth'
 
 const isModalOpen = ref(false)
-const userStats = ref(null)
+const userData = ref(null)
 
-const toggleProfile = () => {
-  isModalOpen.value = !isModalOpen.value
-  if (isModalOpen.value) {
-    userStats.value = { games_played: 120, wins: 45, win_rate: "37.5%" }
+const openProfile = async () => {
+  isModalOpen.value = true
+  try {
+    userData.value = await authApi.getUserData() 
+  } catch (err) {
+    console.error("Failed to load profile", err)
   }
 }
 </script>
 
 <template>
   <div class="user-profile-wrapper">
-    <button class="profile-btn" @click="toggleProfile">
+    <button class="profile-btn" @click="openProfile">
       <SvgIcon name="profile" class="main-icon"/>
     </button>
 
     <ProfileModal 
       :isOpen="isModalOpen" 
-      :userStats="userStats" 
+      :userStats="userData" 
       @close="isModalOpen = false" 
     />
   </div>

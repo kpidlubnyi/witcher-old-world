@@ -1,5 +1,6 @@
 <script setup>
 import Login from '../../../assets/icons/login.svg?component'
+import Logout from '../../../assets/icons/logout.svg?component'
 import Cross from '../../../assets/icons/cross.svg?component'
 import Github from '../../../assets/icons/github.svg?component'
 import Google from '../../../assets/icons/google.svg?component'
@@ -16,6 +17,7 @@ const props = defineProps({
 const iconMap = {
     profile: Profile,
     login: Login,   
+    logout: Logout,
     signup: Signup,      
     cross: Cross,
 

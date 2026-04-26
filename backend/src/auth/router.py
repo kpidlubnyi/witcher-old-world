@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from .services.auth import *
+from ..lobbies.router import CurrentUserDependency
+from .schemas import UserPublic
 
 
 auth_router = APIRouter(prefix='/auth')
@@ -48,3 +50,8 @@ async def refresh_token(request: Request, response: Response):
 async def logout(response: Response):
     logout_user(response)
     return {"status": "logged_out"}
+
+
+@auth_router.get("/profile", response_model=UserPublic)
+async def get_user_data(user: CurrentUserDependency):
+    return user
