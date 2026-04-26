@@ -1,21 +1,24 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
 onMounted(async () => {
   const queryParams = new URLSearchParams(window.location.search);
   const code = queryParams.get("code");
+  const provider = route.params.provider;
 
-  if (code) {
+  if (code && provider) {
     try {
-      await authStore.handleGoogleCallback(code);
-      router.push({name: "home"}); 
+      await authStore.handleSocialCallback(provider, code);
+      router.push({ name: "home" }); 
     } catch (err) {
-      console.error("Auth failed:", err);
+      console.error(`${provider} auth failed:`, err);
+      router.push({ name: "login", query: { error: 'auth_failed' } });
     }
   }
 });

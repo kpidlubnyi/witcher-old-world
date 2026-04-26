@@ -10,7 +10,7 @@ const userData = ref(null)
 const openProfile = async () => {
   isModalOpen.value = true
   try {
-    userData.value = await authApi.getUserData() 
+    userData.value = await authApi.getProfile() 
   } catch (err) {
     console.error("Failed to load profile", err)
   }
@@ -25,7 +25,7 @@ const openProfile = async () => {
 
     <ProfileModal 
       :isOpen="isModalOpen" 
-      :userStats="userData" 
+      :userData="userData" 
       @close="isModalOpen = false" 
     />
   </div>

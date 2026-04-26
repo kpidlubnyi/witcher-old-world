@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     OAUTH_GOOGLE_CLIENT_ID: str
     OAUTH_GOOGLE_REDIRECT_URI: str
     
+    OAUTH_GITHUB_CLIENT_SECRET: str
+    OAUTH_GITHUB_CLIENT_ID: str
+    OAUTH_GITHUB_REDIRECT_URI: str
+    
     DATABASE_URL: str
     JWT_SECRET: str
     

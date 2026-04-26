@@ -6,16 +6,16 @@ from fastapi import HTTPException, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from ...config import settings
-from ..models import User
-from .token import create_access_token, create_refresh_token, decode_token
+from ....config import settings
+from ...models import User
+from ..token import create_access_token, create_refresh_token, decode_token
 
 
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 
 
-def generate_google_oauth_redirect_uri():
+def generate_oauth_redirect_uri():
     query_params = {
         "client_id": settings.OAUTH_GOOGLE_CLIENT_ID,
         "redirect_uri": settings.OAUTH_GOOGLE_REDIRECT_URI,
@@ -73,21 +73,42 @@ def verify_id_token(token: str) -> dict:
   
   
 async def get_or_create_google_user(db: AsyncSession, user_info: dict) -> User:
+    google_id = user_info["sub"]
+    email = user_info.get("email")
+    
     result = await db.execute(
-        select(User).where(User.google_id == user_info["sub"])
+        select(User).where(User.google_id == google_id)
     )
     user = result.scalar_one_or_none()
     
-    if not user:
-        user = User(
-            google_id=user_info["sub"],
-            email=user_info["email"],
-            name=user_info["name"],
-            picture=user_info.get("picture"),
+    if user:
+        return user
+
+    if email:
+        result = await db.execute(
+            select(User).where(User.email == email)
         )
-        db.add(user)
+        user = result.scalar_one_or_none()
+
+    if user:
+        user.google_id = google_id
+        
+        if not user.picture:
+            user.picture = user_info.get("picture")
+            
         await db.commit()
         await db.refresh(user)
+        return user
+    
+    user = User(
+        google_id=google_id,
+        email=email,
+        name=user_info["name"],
+        picture=user_info.get("picture"),
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
     
     return user
 

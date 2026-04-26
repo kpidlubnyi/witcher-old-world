@@ -11,6 +11,10 @@ const toggleExpand = () => {
 function loginWithGoogle() {
     window.location.href = 'http://localhost:8000/auth/google/url';
 }
+
+function loginWithGithub() {
+    window.location.href = 'http://localhost:8000/auth/github/url';
+}
 </script>
 
 <template>
@@ -27,7 +31,7 @@ function loginWithGoogle() {
                 <button class="auth-btn" @click="toggleExpand(), loginWithGoogle()">
                     <SvgIcon name="google" class="icon"/>
                 </button>
-                <button class="auth-btn" @click="toggleExpand">
+                <button class="auth-btn" @click="toggleExpand(), loginWithGithub()">
                     <SvgIcon name="github" class="icon"/>
                 </button>
             </div>

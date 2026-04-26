@@ -1,5 +1,5 @@
 <script setup>
-defineProps(['isOpen', 'userStats']);
+defineProps(['isOpen', 'userData']);
 const emit = defineEmits(['close']);
 import SvgIcon from './UI/SvgIcon.vue';
 import { authApi } from '@/api/auth';
@@ -24,10 +24,10 @@ const handleLogout = async () => {
 
           <div class="modal-content">
             <div class="content-header">
-              <img v-if="userStats?.picture" :src="userStats.picture" class="header-photo" referrerpolicy="no-referrer">
+              <img v-if="userData?.picture" :src="userData.picture" class="header-photo" referrerpolicy="no-referrer">
               <div class="header-info">
-                <div class="user-name">{{ userStats?.name || "Witcher" }}</div>
-                <div class="created-at"> With us since: {{ userStats?.created_at }} </div>
+                <div class="user-name">{{ userData?.name || "Witcher" }}</div>
+                <div class="created-at"> With us since: {{ userData?.created_at }} </div>
               </div>
             </div>
 

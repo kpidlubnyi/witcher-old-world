@@ -19,6 +19,11 @@ const routes = [
     name: 'debug',
     component: DebugPage
   },
+  {
+    path: '/auth/callback/:provider',
+    name: 'auth-callback',
+    component: AuthCallback
+  },
 ]
 
 const router = createRouter({
