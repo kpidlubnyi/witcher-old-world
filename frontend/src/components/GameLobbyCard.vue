@@ -3,7 +3,7 @@ import { lobbiesApi } from "@/api/lobbies"
 import { computed } from "vue";
 
 
-const props = defineProps(['data', 'activeLobbyId'])  
+const props = defineProps(['data', 'activeLobbyId', 'isLoggedIn'])  
 const emit = defineEmits(['status-changed'])
 
 
@@ -11,6 +11,11 @@ const isMyLobby = computed(() => props.activeLobbyId === props.data.id)
 const isInAnyLobby = computed(() => !!props.activeLobbyId)
 
 const handleJoinToLobby = async (id) => {
+    if (!props.isLoggedIn) {
+        alert("Please log in to join to the lobby!")
+        return;
+    }
+    
     try {
         await lobbiesApi.joinToLobby(id);
         emit("status-changed", id)

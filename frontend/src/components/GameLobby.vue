@@ -1,7 +1,9 @@
 <script setup>
 import GameLobbyCard from './GameLobbyCard.vue'
-import { useWebSocket } from '../useWebSocket'
 import AuthButton from './AuthButton.vue'
+import UserButton from './UserButton.vue'
+
+import { useWebSocket } from '../useWebSocket'
 import { ref, onMounted } from 'vue'
 import { lobbiesApi } from '@/api/lobbies'
 
@@ -9,13 +11,16 @@ import { lobbiesApi } from '@/api/lobbies'
 const { data, connect } = useWebSocket("ws://localhost:8000/lobbies/")
 const activeLobbyId = ref(null)
 const showCreateForm = ref(false)
+const isLoggedIn = ref(false)
 
 onMounted(async () => {
   connect()
   try {
     const status = await lobbiesApi.getMyStatus()
+    isLoggedIn.value = true
     activeLobbyId.value = status.lobby_id
   } catch (err) {
+    isLoggedIn = false
     console.error(`Failed to get status: ${err}`)
   }
 })
@@ -45,11 +50,15 @@ const handleCreateLobby = async () => {
 </script>
 
 <template>
-  <AuthButton class="auth-button"/>
+  <div class="top-right-corner">
+    <UserButton v-if="isLoggedIn"/>
+    <AuthButton v-else class="auth-button"/>
+  </div>
+
   <h1>Lobbies:</h1>
 
   <button
-    v-if="!showCreateForm"
+    v-if="!showCreateForm && isLoggedIn"
     :disabled="activeLobbyId"
     @click="showCreateForm = true"
     class="open-form-btn"
@@ -75,6 +84,7 @@ const handleCreateLobby = async () => {
       <GameLobbyCard 
         :data="lobby" 
         :activeLobbyId="activeLobbyId"
+        :isLoggedIn="isLoggedIn"
         @status-changed="updateActiveLobby"
       />
     </li>
@@ -82,9 +92,9 @@ const handleCreateLobby = async () => {
 </template>
 
 <style scoped>
-.auth-button {
+.top-right-corner {
   position: fixed;
-  left: 93%
+  right: 120px;
 }
 
 .create-lobby-btn {
